@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Recall — Vocabulary Trainer</title>
+<meta name="theme-color" content="#0073eb">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230073eb'/%3E%3Ctext x='50' y='68' font-size='58' font-family='system-ui,sans-serif' font-weight='700' fill='white' text-anchor='middle'%3ER%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230073eb'/%3E%3Ctext x='50' y='68' font-size='58' font-family='system-ui,sans-serif' font-weight='700' fill='white' text-anchor='middle'%3ER%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href='data:application/manifest+json,%7B%22name%22%3A%22Recall%20Vocabulary%20Trainer%22%2C%22short_name%22%3A%22Recall%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f4f4f9%22%2C%22theme_color%22%3A%22%230073eb%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D%2522http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%2522%2520viewBox%3D%25220%25200%2520100%2520100%2522%253E%253Crect%2520width%3D%2522100%2522%2520height%3D%2522100%2522%2520rx%3D%252220%2522%2520fill%3D%2522%25230073eb%2522%2F%253E%253Ctext%2520x%3D%252250%2522%2520y%3D%252268%2522%2520font-size%3D%252258%2522%2520font-family%3D%2522system-ui%2Csans-serif%2522%2520font-weight%3D%2522700%2522%2520fill%3D%2522white%2522%2520text-anchor%3D%2522middle%2522%253ER%253C%2Ftext%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D'>
+<style>
+  :root{
+    --accent:#0073eb;
+    --accent-dark:#005bc2;
+    --text:#404040;
+    --bg:#f4f4f9;
+    --card:#ffffff;
+    --border:#e0e0e0;
+    --danger:#d64545;
+    --muted-badge:#999;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-tap-highlight-color:transparent;
+    overscroll-behavior:none;
+  }
+  #app{
+    max-width:520px;
+    margin:0 auto;
+    height:100vh;
+    height:100dvh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+  }
+  header.topbar{
+    padding:18px 20px 12px;
+    flex-shrink:0;
+  }
+  header.topbar h1{
+    font-size:20px;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  header.topbar p{
+    margin:2px 0 0;
+    font-size:13px;
+    color:#8a8a8a;
+  }
+  main{
+    flex:1;
+    overflow-y:auto;
+    padding:4px 20px 24px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .page{
+    display:none;
+    animation:fadeIn .25s ease;
+  }
+  .page.active{display:block;}
+  @keyframes fadeIn{
+    from{opacity:0; transform:translateY(6px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+
+  /* Bottom nav */
+  nav.bottomnav{
+    flex-shrink:0;
+    display:flex;
+    border-top:1px solid var(--border);
+    background:var(--card);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  nav.bottomnav button{
+    flex:1;
+    background:none;
+    border:none;
+    padding:10px 4px 8px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:3px;
+    color:#9a9a9a;
+    font-size:11px;
+    font-family:inherit;
+    cursor:pointer;
+    transition:color .15s ease;
+  }
+  nav.bottomnav button svg{
+    width:22px;
+    height:22px;
+    stroke:#9a9a9a;
+    fill:none;
+    stroke-width:1.8;
+    transition:stroke .15s ease;
+  }
+  nav.bottomnav button.active{color:var(--accent);}
+  nav.bottomnav button.active svg{stroke:var(--accent);}
+
+  /* Recall card */
+  .recall-wrap{
+    display:flex;
+    flex-direction:column;
+    min-height:calc(100dvh - 190px);
+    justify-content:center;
+    gap:18px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:32px 24px;
+    text-align:center;
+    min-height:220px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    cursor:pointer;
+    transition:box-shadow .2s ease, transform .15s ease;
+  }
+  .card:active{transform:scale(0.99);}
+  .card .term{
+    font-size:26px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    word-break:break-word;
+  }
+  .card .tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    justify-content:center;
+  }
+  .tag{
+    background:#eaf3ff;
+    color:var(--accent);
+    font-size:11px;
+    font-weight:600;
+    padding:3px 9px;
+    border-radius:100px;
+  }
+  .card .definition{
+    font-size:16px;
+    line-height:1.5;
+    color:var(--text);
+    padding-top:6px;
+    border-top:1px solid var(--border);
+    margin-top:4px;
+    width:100%;
+    animation:revealFade .28s ease;
+  }
+  @keyframes revealFade{
+    from{opacity:0; transform:translateY(4px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .card .hint{
+    font-size:12px;
+    color:#b5b5b5;
+  }
+  .recall-actions{
+    display:flex;
+    gap:10px;
+  }
+  .recall-actions button{
+    flex:1;
+  }
+
+  /* Buttons */
+  .btn{
+    appearance:none;
+    border:none;
+    border-radius:12px;
+    padding:13px 16px;
+    font-size:15px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    transition:opacity .15s ease, transform .1s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{background:var(--accent); color:#fff;}
+  .btn-primary:disabled{opacity:.4;}
+  .btn-secondary{background:#eef1f6; color:var(--text);}
+  .btn-outline{background:transparent; border:1.5px solid var(--border); color:var(--text);}
+  .btn-danger-text{background:transparent; color:var(--danger); font-weight:600;}
+  .btn-full{width:100%;}
+  .btn-small{padding:8px 12px; font-size:13px; border-radius:9px;}
+
+  .empty-state{
+    text-align:center;
+    padding:40px 20px;
+    color:#8f8f8f;
+  }
+  .empty-state svg{
+    width:44px; height:44px; stroke:#c7c7d1; fill:none; stroke-width:1.5; margin-bottom:12px;
+  }
+  .empty-state p{margin:4px 0; font-size:14px; line-height:1.5;}
+  .empty-state .big{font-size:16px; font-weight:600; color:var(--text);}
+
+  /* Form */
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    margin-bottom:6px;
+    color:#6b6b6b;
+  }
+  .field input[type=text], .field textarea{
+    width:100%;
+    border:1.5px solid var(--border);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:15px;
+    font-family:inherit;
+    color:var(--text);
+    background:#fff;
+    transition:border-color .15s ease;
+  }
+  .field input[type=text]:focus, .field textarea:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
+  .field textarea{min-height:100px; resize:vertical;}
+  .toast{
+    position:fixed;
+    bottom:90px;
+    left:50%;
+    transform:translateX(-50%) translateY(10px);
+    background:#2b2b2b;
+    color:#fff;
+    padding:10px 18px;
+    border-radius:100px;
+    font-size:13px;
+    font-weight:600;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+    z-index:50;
+    white-space:nowrap;
+  }
+  .toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+
+  /* Glossary */
+  .search-bar{
+    position:sticky;
+    top:0;
+    background:var(--bg);
+    padding:6px 0 12px;
+    z-index:5;
+  }
+  .search-bar input{
+    width:100%;
+    border:1.5px solid var(--border);
+    border-radius:12px;
+    padding:12px 14px 12px 40px;
+    font-size:15px;
+    font-family:inherit;
+    background:#fff url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%239a9a9a" stroke-width="2"%3E%3Ccircle cx="11" cy="11" r="7"/%3E%3Cline x1="21" y1="21" x2="16.65" y2="16.65"/%3E%3C/svg%3E') no-repeat 12px center;
+    background-size:17px;
+  }
+  .search-bar input:focus{outline:none; border-color:var(--accent);}
+
+  .gloss-item{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:16px;
+    margin-bottom:10px;
+  }
+  .gloss-item.muted{opacity:.55;}
+  .gloss-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .gloss-term{font-size:16px; font-weight:700;}
+  .gloss-def{font-size:14px; margin-top:4px; line-height:1.45; color:#5a5a5a;}
+  .gloss-tags{display:flex; flex-wrap:wrap; gap:5px; margin-top:8px;}
+  .status-pill{
+    font-size:10px;
+    font-weight:700;
+    padding:3px 8px;
+    border-radius:100px;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+  .status-pill.active{background:#e5f4ea; color:#28925a;}
+  .status-pill.muted{background:#f0f0f0; color:#999;}
+  .gloss-actions{
+    display:flex;
+    gap:8px;
+    margin-top:12px;
+  }
+  .gloss-actions button{flex:1;}
+
+  .section-title{
+    font-size:12px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:#a5a5a5;
+    margin:22px 0 10px;
+  }
+  .footer-actions{
+    display:flex;
+    gap:10px;
+    margin-top:8px;
+  }
+  .footer-actions .btn{flex:1;}
+  input[type=file]{display:none;}
+
+  /* Modal */
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(30,30,35,.45);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:100;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal{
+    background:#fff;
+    width:100%;
+    max-width:520px;
+    border-radius:20px 20px 0 0;
+    padding:24px 20px calc(24px + env(safe-area-inset-bottom));
+    max-height:85vh;
+    overflow-y:auto;
+    animation:slideUp .22s ease;
+  }
+  @keyframes slideUp{
+    from{transform:translateY(30px); opacity:0;}
+    to{transform:translateY(0); opacity:1;}
+  }
+  .modal h2{margin:0 0 16px; font-size:18px;}
+  .modal-actions{display:flex; gap:10px; margin-top:6px;}
+  .modal-actions .btn{flex:1;}
+
+  ::selection{background:#cfe4ff;}
+  button:focus-visible, input:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="topbar">
+    <h1 id="pageTitle">Recall</h1>
+    <p id="pageSub">Test yourself on a random term</p>
+  </header>
+
+  <main>
+    <!-- RECALL PAGE -->
+    <section class="page active" id="page-recall">
+      <div class="recall-wrap" id="recallWrap"></div>
+    </section>
+
+    <!-- ADD PAGE -->
+    <section class="page" id="page-add">
+      <form id="addForm" autocomplete="off">
+        <div class="field">
+          <label for="inputTerm">Term</label>
+          <input type="text" id="inputTerm" required placeholder="e.g. Ephemeral">
+        </div>
+        <div class="field">
+          <label for="inputDef">Definition</label>
+          <textarea id="inputDef" required placeholder="What does it mean?"></textarea>
+        </div>
+        <div class="field">
+          <label for="inputTags">Tags <span style="font-weight:400;color:#b5b5b5;">(optional, comma-separated)</span></label>
+          <input type="text" id="inputTags" placeholder="e.g. literature, exam-prep">
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Save term</button>
+      </form>
+    </section>
+
+    <!-- GLOSSARY PAGE -->
+    <section class="page" id="page-glossary">
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search terms, definitions, tags…">
+      </div>
+      <div id="glossaryList"></div>
+
+      <div class="section-title">Backup</div>
+      <div class="footer-actions">
+        <button class="btn btn-outline" id="exportBtn">Export library (JSON)</button>
+        <button class="btn btn-outline" id="importTrigger">Import library</button>
+        <input type="file" id="importInput" accept="application/json">
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottomnav">
+    <button data-page="recall" class="active">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
+      Recall
+    </button>
+    <button data-page="add">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add
+    </button>
+    <button data-page="glossary">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Glossary
+    </button>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Edit modal -->
+  <div class="modal-overlay" id="editOverlay">
+    <div class="modal">
+      <h2>Edit term</h2>
+      <div class="field">
+        <label for="editTerm">Term</label>
+        <input type="text" id="editTerm">
+      </div>
+      <div class="field">
+        <label for="editDef">Definition</label>
+        <textarea id="editDef"></textarea>
+      </div>
+      <div class="field">
+        <label for="editTags">Tags</label>
+        <input type="text" id="editTags">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="editCancel">Cancel</button>
+        <button class="btn btn-primary" id="editSave">Save changes</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const STORAGE_KEY = "vocabulary_pwa_data";
+  let library = [];       // {id, term, definition, tags:[], muted:bool}
+  let currentCardId = null;
+  let revealed = false;
+  let editingId = null;
+
+  // ---------- Persistence ----------
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      library = raw ? JSON.parse(raw) : [];
+      if(!Array.isArray(library)) library = [];
+    }catch(e){
+      library = [];
+    }
+  }
+  function save(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
+    }catch(e){
+      showToast("Storage error — changes may not persist");
+    }
+  }
+  function uid(){
+    return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  }
+
+  // ---------- Toast ----------
+  let toastTimer = null;
+  function showToast(msg){
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>t.classList.remove("show"), 1800);
+  }
+
+  // ---------- Navigation ----------
+  const titles = {
+    recall: ["Recall","Test yourself on a random term"],
+    add: ["Add term","Quick capture a new word"],
+    glossary: ["Glossary","Search and manage your library"]
+  };
+  function goToPage(name){
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById("page-"+name).classList.add("active");
+    document.querySelectorAll("nav.bottomnav button").forEach(b=>{
+      b.classList.toggle("active", b.dataset.page === name);
+    });
+    document.getElementById("pageTitle").textContent = titles[name][0];
+    document.getElementById("pageSub").textContent = titles[name][1];
+    if(name === "recall") renderRecall();
+    if(name === "glossary") renderGlossary();
+  }
+  document.querySelectorAll("nav.bottomnav button").forEach(btn=>{
+    btn.addEventListener("click", ()=>goToPage(btn.dataset.page));
+  });
+
+  // ---------- Escaping ----------
+  function esc(str){
+    const d = document.createElement("div");
+    d.textContent = str == null ? "" : String(str);
+    return d.innerHTML;
+  }
+
+  // ---------- Recall ----------
+  function pickRandomActive(excludeId){
+    const pool = library.filter(w => !w.muted && w.id !== excludeId);
+    if(pool.length === 0){
+      const anyPool = library.filter(w => !w.muted);
+      if(anyPool.length === 0) return null;
+      return anyPool[Math.floor(Math.random()*anyPool.length)];
+    }
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+
+  function renderRecall(){
+    const wrap = document.getElementById("recallWrap");
+    const activeCount = library.filter(w=>!w.muted).length;
+
+    if(library.length === 0){
+      wrap.innerHTML = emptyStateHTML(
+        "No words yet",
+        "Head to the Add tab to capture your first term."
+      );
+      return;
+    }
+    if(activeCount === 0){
+      wrap.innerHTML = emptyStateHTML(
+        "Everything's muted",
+        "All your terms are excluded from Recall. Unmute some in the Glossary tab to bring them back."
+      );
+      return;
+    }
+
+    let card = library.find(w => w.id === currentCardId && !w.muted);
+    if(!card){
+      card = pickRandomActive(null);
+      currentCardId = card ? card.id : null;
+      revealed = false;
+    }
+    if(!card){
+      wrap.innerHTML = emptyStateHTML("Everything's muted", "Unmute some terms in the Glossary tab.");
+      return;
+    }
+
+    const tagsHTML = (card.tags && card.tags.length)
+      ? `<div class="tags">${card.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`
+      : "";
+
+    wrap.innerHTML = `
+      <div class="card" id="flashcard" role="button" tabindex="0" aria-label="Tap to ${revealed ? 'hide' : 'reveal'} definition">
+        <div class="term">${esc(card.term)}</div>
+        ${tagsHTML}
+        ${revealed
+          ? `<div class="definition">${esc(card.definition)}</div>`
+          : `<div class="hint">Tap to reveal definition</div>`}
+      </div>
+      <div class="recall-actions">
+        <button class="btn btn-secondary" id="nextBtn">Next word</button>
+        <button class="btn btn-outline" id="excludeBtn">Exclude from random</button>
+      </div>
+    `;
+
+    const flashcard = document.getElementById("flashcard");
+    const toggleReveal = ()=>{
+      revealed = !revealed;
+      renderRecall();
+    };
+    flashcard.addEventListener("click", toggleReveal);
+    flashcard.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); toggleReveal(); }
+    });
+
+    document.getElementById("nextBtn").addEventListener("click", ()=>{
+      const next = pickRandomActive(card.id);
+      currentCardId = next ? next.id : null;
+      revealed = false;
+      renderRecall();
+    });
+
+    document.getElementById("excludeBtn").addEventListener("click", ()=>{
+      card.muted = true;
+      save();
+      showToast(`"${card.term}" excluded from Recall`);
+      const next = pickRandomActive(card.id);
+      currentCardId = next ? next.id : null;
+      revealed = false;
+      renderRecall();
+    });
+  }
+
+  function emptyStateHTML(big, small){
+    return `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="9"/></svg>
+        <p class="big">${esc(big)}</p>
+        <p>${esc(small)}</p>
+      </div>
+    `;
+  }
+
+  // ---------- Add ----------
+  const addForm = document.getElementById("addForm");
+  addForm.addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const term = document.getElementById("inputTerm").value.trim();
+    const definition = document.getElementById("inputDef").value.trim();
+    const tagsRaw = document.getElementById("inputTags").value.trim();
+    if(!term || !definition) return;
+    const tags = tagsRaw
+      ? tagsRaw.split(",").map(t=>t.trim()).filter(Boolean)
+      : [];
+    library.push({ id: uid(), term, definition, tags, muted: false });
+    save();
+    addForm.reset();
+    document.getElementById("inputTerm").focus();
+    showToast("Term saved");
+  });
+
+  // ---------- Glossary ----------
+  const searchInput = document.getElementById("searchInput");
+  searchInput.addEventListener("input", renderGlossary);
+
+  function renderGlossary(){
+    const list = document.getElementById("glossaryList");
+    const q = searchInput.value.trim().toLowerCase();
+
+    let items = library.slice().sort((a,b)=>a.term.localeCompare(b.term, undefined, {sensitivity:"base"}));
+
+    if(q){
+      items = items.filter(w=>{
+        return w.term.toLowerCase().includes(q)
+          || w.definition.toLowerCase().includes(q)
+          || (w.tags||[]).some(t=>t.toLowerCase().includes(q));
+      });
+    }
+
+    if(library.length === 0){
+      list.innerHTML = emptyStateHTML("Your glossary is empty", "Add your first term from the Add tab.");
+      return;
+    }
+    if(items.length === 0){
+      list.innerHTML = emptyStateHTML("No matches", "Try a different search term.");
+      return;
+    }
+
+    list.innerHTML = items.map(w=>{
+      const tagsHTML = (w.tags && w.tags.length)
+        ? `<div class="gloss-tags">${w.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`
+        : "";
+      return `
+        <div class="gloss-item ${w.muted?'muted':''}" data-id="${w.id}">
+          <div class="gloss-top">
+            <div>
+              <div class="gloss-term">${esc(w.term)}</div>
+              <div class="gloss-def">${esc(w.definition)}</div>
+              ${tagsHTML}
+            </div>
+            <span class="status-pill ${w.muted?'muted':'active'}">${w.muted ? "Excluded" : "Active"}</span>
+          </div>
+          <div class="gloss-actions">
+            <button class="btn btn-small btn-outline" data-action="edit">Edit</button>
+            <button class="btn btn-small btn-secondary" data-action="toggle">${w.muted ? "Unmute" : "Mute"}</button>
+            <button class="btn btn-small btn-danger-text" data-action="delete">Delete</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    list.querySelectorAll(".gloss-item").forEach(el=>{
+      const id = el.dataset.id;
+      el.querySelector('[data-action="edit"]').addEventListener("click", ()=>openEdit(id));
+      el.querySelector('[data-action="toggle"]').addEventListener("click", ()=>toggleMute(id));
+      el.querySelector('[data-action="delete"]').addEventListener("click", ()=>deleteItem(id));
+    });
+  }
+
+  function toggleMute(id){
+    const w = library.find(x=>x.id===id);
+    if(!w) return;
+    w.muted = !w.muted;
+    save();
+    renderGlossary();
+    showToast(w.muted ? `"${w.term}" excluded` : `"${w.term}" active again`);
+  }
+
+  function deleteItem(id){
+    const w = library.find(x=>x.id===id);
+    if(!w) return;
+    if(!confirm(`Delete "${w.term}"? This can't be undone.`)) return;
+    library = library.filter(x=>x.id!==id);
+    save();
+    renderGlossary();
+    showToast("Term deleted");
+  }
+
+  // Edit modal
+  const editOverlay = document.getElementById("editOverlay");
+  function openEdit(id){
+    const w = library.find(x=>x.id===id);
+    if(!w) return;
+    editingId = id;
+    document.getElementById("editTerm").value = w.term;
+    document.getElementById("editDef").value = w.definition;
+    document.getElementById("editTags").value = (w.tags||[]).join(", ");
+    editOverlay.classList.add("show");
+  }
+  function closeEdit(){
+    editOverlay.classList.remove("show");
+    editingId = null;
+  }
+  document.getElementById("editCancel").addEventListener("click", closeEdit);
+  editOverlay.addEventListener("click", (e)=>{
+    if(e.target === editOverlay) closeEdit();
+  });
+  document.getElementById("editSave").addEventListener("click", ()=>{
+    const w = library.find(x=>x.id===editingId);
+    if(!w) return;
+    const term = document.getElementById("editTerm").value.trim();
+    const definition = document.getElementById("editDef").value.trim();
+    const tagsRaw = document.getElementById("editTags").value.trim();
+    if(!term || !definition){
+      showToast("Term and definition are required");
+      return;
+    }
+    w.term = term;
+    w.definition = definition;
+    w.tags = tagsRaw ? tagsRaw.split(",").map(t=>t.trim()).filter(Boolean) : [];
+    save();
+    closeEdit();
+    renderGlossary();
+    showToast("Changes saved");
+  });
+
+  // ---------- Export / Import ----------
+  document.getElementById("exportBtn").addEventListener("click", ()=>{
+    const blob = new Blob([JSON.stringify(library, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = `vocabulary-library-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast("Library exported");
+  });
+
+  const importInput = document.getElementById("importInput");
+  document.getElementById("importTrigger").addEventListener("click", ()=>importInput.click());
+  importInput.addEventListener("change", ()=>{
+    const file = importInput.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const data = JSON.parse(reader.result);
+        if(!Array.isArray(data)) throw new Error("Invalid format");
+        const cleaned = data.filter(x => x && typeof x.term === "string" && typeof x.definition === "string")
+          .map(x => ({
+            id: (typeof x.id === "string" && x.id) ? x.id : uid(),
+            term: x.term,
+            definition: x.definition,
+            tags: Array.isArray(x.tags) ? x.tags.filter(t=>typeof t==="string") : [],
+            muted: !!x.muted
+          }));
+        if(cleaned.length === 0) throw new Error("No valid terms found");
+
+        const doMerge = confirm(`Found ${cleaned.length} term(s).\n\nPress OK to MERGE with your existing library, or Cancel to REPLACE it entirely.`);
+        if(doMerge){
+          const existingIds = new Set(library.map(w=>w.id));
+          cleaned.forEach(w=>{
+            if(existingIds.has(w.id)) w.id = uid();
+            library.push(w);
+          });
+        }else{
+          library = cleaned;
+        }
+        save();
+        renderGlossary();
+        renderRecall();
+        showToast(doMerge ? "Library merged" : "Library replaced");
+      }catch(err){
+        showToast("Import failed — invalid JSON file");
+      }
+      importInput.value = "";
+    };
+    reader.readAsText(file);
+  });
+
+  // ---------- Service Worker (inline via Blob) ----------
+  function registerServiceWorker(){
+    if(!("serviceWorker" in navigator)) return;
+    const swSource = `
+      const CACHE_NAME = "recall-pwa-v1";
+      self.addEventListener("install", (event)=>{
+        self.skipWaiting();
+      });
+      self.addEventListener("activate", (event)=>{
+        event.waitUntil(self.clients.claim());
+      });
+      self.addEventListener("fetch", (event)=>{
+        event.respondWith(
+          caches.open(CACHE_NAME).then(async (cache)=>{
+            const cached = await cache.match(event.request);
+            if(cached) return cached;
+            try{
+              const response = await fetch(event.request);
+              if(event.request.method === "GET" && response && response.status === 200){
+                cache.put(event.request, response.clone());
+              }
+              return response;
+            }catch(err){
+              if(event.request.mode === "navigate"){
+                const self_cached = await cache.match(self.registration.scope);
+                if(self_cached) return self_cached;
+              }
+              return cached || Response.error();
+            }
+          })
+        );
+      });
+    `;
+    try{
+      const blob = new Blob([swSource], {type:"application/javascript"});
+      const swUrl = URL.createObjectURL(blob);
+      navigator.serviceWorker.register(swUrl).then(reg=>{
+        // Cache the current page itself so it works fully offline after first load.
+        if("caches" in window){
+          caches.open("recall-pwa-v1").then(cache=>{
+            cache.put(window.location.href, new Response(document.documentElement.outerHTML, {
+              headers: {"Content-Type":"text/html"}
+            }));
+          });
+        }
+      }).catch(()=>{ /* offline support degrades gracefully */ });
+    }catch(e){ /* Blob-based SW unsupported; app still works online */ }
+  }
+
+  // ---------- Boot ----------
+  load();
+  renderRecall();
+  renderGlossary();
+  registerServiceWorker();
+
+})();
+</script>
+</body>
+</html>
